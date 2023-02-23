@@ -43,10 +43,23 @@ public class AuthenticationService {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         var user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
         var jwtToken = jwtService.generateToken(user);
+        revokeAllUserTokens(user);
         saveUserToken(user, jwtToken);
         return AuthenticationResponse.builder()
                 .token(jwtToken)
                 .build();
+    }
+
+    private void revokeAllUserTokens(User user){
+        var validUserTokens = tokenRepository.findAllValidTokensByUser(user.getId());
+        if(validUserTokens.isEmpty()){
+            return;
+        }
+        validUserTokens.forEach(token -> {
+            token.setRevoked(true);
+            token.setExpired(true);
+        });
+        tokenRepository.saveAll(validUserTokens);
     }
     private void saveUserToken(User user, String jwtToken) {
         var token = Token.builder()

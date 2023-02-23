@@ -21,7 +21,7 @@ import java.util.Objects;
 public class User implements UserDetails {
     @Id
     @GeneratedValue
-    private Long id;
+    private Integer id;
     private String firstName;
     private String lastName;
     private String email;
